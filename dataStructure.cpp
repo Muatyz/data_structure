@@ -610,6 +610,7 @@ public:
 
 	bool visited[MaxVertexNum];
 
+	//初始化visited[]数组，使得所有顶点的状态均为未被访问
 	void InitVisited() {
 		for (int i = 0; i < MaxVertexNum; i++) {
 			visited[MaxVertexNum] = false;
@@ -645,7 +646,57 @@ public:
 			}
 		}
 	}
+	
+	//d[i]代表了从u到i的最短路径，path[i]记录的是i的前驱结点
+	void BFS_MIN_Distance(MGraph G,int u){
+		int d[G.vexnum];
+		int path[G.vexnum];
+		for(int i = 0; i < G.vexnum; ++i){
+			d[i] = Infinity;
+			path[i] = -1;
+		}
+		d[u] = 0;								//u是起始地点，最短路径必定为0
+		InitVisited();
+		visited[u] = true;
+		Queue<VertexType,MaxVertexNum>queue;
+		queue.EnQueue(u);
+		while(!queue.isEmpty()){
+			queue.DeQueue(u);
+			for(VertexType w = FirstNeighbor(G,u);w >= 0;w = NextNeighbor(G,u,w)){
+				if(!visited[w]){
+					d[w] = d[u] + 1;
+					path[w] = u;
+					visited[w] = true;
+					queue.EnQueue(w);
+				}//if
+			}//for
+		}//while
+	}
 
+	//final[]标记是否找到最短路径;dist[]表示最短路径长度;path[]表示路径上的前驱结点
+	//Dijkstra算法
+
+	//Floyd算法(动态规划).时间复杂度O(n^3)
+	void FloydMinPath(MGraph G){
+		int path[G.vexnum][G.vexnum];
+		int A[G.vexnum][G.vexnum];
+		for(int i = 0;i < G.vexnum;i++){
+			path[0][i] = -1;
+		}
+		//...Init
+		
+		//三重嵌套使得时间复杂度很高
+		for(int k = 0;k < G.vexnum; k ++){
+			for(int i = 0;i < G.vexnum;i++){
+				for(int j = 0;j < G.vexnum;j++){
+					if(A[i][j] > A[i][k] + A[k][j]){
+						A[i][j] = A[i][k] + A[k][j];
+						path[i][j] = k;
+					}
+				}
+			}
+		};
+	};
 };
 
 void Graphic::BFS(MGraph G, VertexType v) {
@@ -664,7 +715,7 @@ void Graphic::BFS(MGraph G, VertexType v) {
 			}//if
 		}//for
 	}//while
-}
+};
 
 void Graphic::DFS(MGraph G, VertexType v) {
 	visit(v);
