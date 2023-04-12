@@ -600,8 +600,23 @@ public:
 	//图G中顶点X的第一个邻接点
 	VertexType FirstNeighbor(MGraph G, VertexType x);
 
+	VertexType ALG_FirstNeighbor(ALGraph G,VertexType x){
+		ArcNode *Arcptr = G.vertices[x].first;
+		return Arcptr -> adjvex;
+	}
+
 	//图G中顶点X的第一个邻接点为Y，求下一個邻接点
 	VertexType NextNeighbor(MGraph G, VertexType x, VertexType y);
+
+	VertexType ALG_NextNeighbor(ALGraph G,VertexType x,VertexType y){
+		ArcNode *Arcptr = G.vertices[x].first;
+		while(Arcptr -> adjvex != y){
+			Arcptr = Arcptr -> next;
+		}
+		//停止时，Acrptr指向的弧的弧头是y
+		if(Arcptr -> next == NULL)return -1;
+		return Arcptr -> next -> adjvex;
+	}
 
 	int Get_edge_value(MGraph G, VertexType x, VertexType y);
 
@@ -635,9 +650,9 @@ public:
 		}
 	}
 
-	void DFS(MGraph G, VertexType v);
+	void DFS(ALGraph G, VertexType v);
 
-	void DFSTraverse(MGraph G) {
+	void DFSTraverse(ALGraph G) {
 		//visited[]bool数组的情况应该由总体的流程控制函数来决定。
 		InitVisited();
 		for (VertexType v = 0; v < G.vexnum; ++v) {
@@ -697,6 +712,74 @@ public:
 			}
 		};
 	};
+	
+	//求邻接表法存储的图G中第i点的出度
+	int ALG_Outdegree(ALGraph G,int i){
+		ArcNode *Arcptr = G.vertices[i].first;
+		int j = 0;
+		while(Arcptr != NULL){
+			Arcptr = Arcptr -> next;
+			j++;
+		}
+		return j;
+	}
+
+	int ALG_Indegree(ALGraph G,int i){
+		int j = 0;
+		//每个顶点结点都要查看一遍自身作为弧尾的边界点是否指向了结点i
+		//若有，则计数器++
+		for(int k = 0;k < G.vexnum;k++){
+			ArcNode *Arcptr = G.vertices[i].first;
+			while(Arcptr != NULL){
+				if(Arcptr -> adjvex == i){
+					j++;break;
+				}
+				Arcptr = Arcptr -> next;
+			}
+		}
+
+		return j;
+	}
+
+	//拓扑排序序列生成方法
+	bool TopologicalSort(ALGraph G){
+		Stack<int,MaxVertexNum>stack;
+		int print[G.vexnum];
+		int i;
+		for(i = 0;i < G.vexnum;i++){
+			if(ALG_Indegree(G,i) == 0)stack.push(i);
+		}
+		int count = 0;
+		while(!stack.isEmpty()){
+			stack.pop(i);
+			print[count++] = i;//记录打印出的拓扑序列
+			for(ArcNode *p = G.vertices[i].first;p;p = p -> next){
+				int v = p -> adjvex;
+				int indegree = ALG_Indegree(G,v);
+				if(!(--indegree))stack.push(v);
+
+			}//for
+		}//while
+		if(count < G.vexnum){
+			//存在回路
+			return false;
+		}
+		else{
+			return true;
+		}
+	}
+
+	//DFS算法实现逆拓扑排序
+	void AntiTopologicalSort(ALGraph G,int v){
+		InitVisited();
+		visited[v] = true;
+		for(VertexType w = ALG_FirstNeighbor(G,v);w>=0;w = ALG_NextNeighbor(G,v,w)){
+			if(!visited[w]){
+				DFS(G,w);
+			}
+		}
+		visit(v);
+	}
 };
 
 void Graphic::BFS(MGraph G, VertexType v) {
@@ -717,15 +800,15 @@ void Graphic::BFS(MGraph G, VertexType v) {
 	}//while
 };
 
-void Graphic::DFS(MGraph G, VertexType v) {
+void Graphic::DFS(ALGraph G, VertexType v) {
 	visit(v);
 	visited[v] = true;
-	for (VertexType w = FirstNeighbor(G, v); w >= 0;
-			w = NextNeighbor(G, v, w)) {
+	for (VertexType w = ALG_FirstNeighbor(G, v); w >= 0;
+			w = ALG_NextNeighbor(G, v, w)) {
 		if (!visited[w]) {
 			DFS(G, w);
-		}				//if
-	}				//for
+		}//if
+	}//for
 }
 
 int main() {
