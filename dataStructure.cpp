@@ -683,4 +683,9 @@ int main() {
     
     //this is a simple main() function to operate.
     //focus on the classes former and figure out these data structures
+
+	//this comment was wroten on WSL2(Ubuntu-22.04 LTS).
+	//the experience is : edit your personal file on Windows
+	//and it will also work if you launch VS Code on WSL2.
+	//PUSH IT on 2023.04.12
 }
