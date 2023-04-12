@@ -680,6 +680,7 @@ void Graphic::DFS(MGraph G, VertexType v) {
 int main() {
 	cout << "!!!Hello World!!!" << endl; // prints !!!Hello World!!!
 	return 0;
-
-	cout << "hello" << endl;
+    
+    //this is a simple main() function to operate.
+    //focus on the classes former and figure out these data structures
 }
