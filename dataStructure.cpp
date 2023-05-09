@@ -202,7 +202,7 @@ public:
 	} HString;
 
 	bool InitHString(HString &S) {
-		S.ch = (char*) malloc(sizeof(MAXLEN * sizeof(char)));
+		S.ch = (char*) malloc(MAXLEN * sizeof(char));
 		if (S.ch == NULL)
 			return false;
 		S.length = 0;
@@ -340,7 +340,7 @@ public:
 		}
 	}
 
-	void PreThread(ThreadTree T) {
+	void PreThread(ThreadTree &T) {
 		//actually thread will destroy the original relationship between parent and lchild.
 		//so we need the tag to determine whether we should activate the PreThread() function.
 		if (T != NULL) {
@@ -351,7 +351,7 @@ public:
 		}
 	}
 
-	void CreatePreThread(ThreadTree T) {
+	void CreatePreThread(ThreadTree &T) {
 		pre = NULL;
 		if (T != NULL) {
 			PreThread(T);
@@ -378,7 +378,7 @@ public:
 		}
 	}
 
-	void CreatePostThread(ThreadTree T) {
+	void CreatePostThread(ThreadTree &T) {
 		ThreadTree pre = NULL;
 		if (T != NULL) {
 			PostThread(T, pre);
@@ -628,7 +628,7 @@ public:
 	//初始化visited[]数组，使得所有顶点的状态均为未被访问
 	void InitVisited() {
 		for (int i = 0; i < MaxVertexNum; i++) {
-			visited[MaxVertexNum] = false;
+			visited[i] = false;
 		}
 	}
 
@@ -770,7 +770,7 @@ public:
 	}
 
 	//DFS算法实现逆拓扑排序
-	void AntiTopologicalSort(ALGraph G,int v){
+	void Anti_TopologicalSort(ALGraph G,int v){
 		InitVisited();
 		visited[v] = true;
 		for(VertexType w = ALG_FirstNeighbor(G,v);w>=0;w = ALG_NextNeighbor(G,v,w)){
@@ -810,6 +810,180 @@ void Graphic::DFS(ALGraph G, VertexType v) {
 		}//if
 	}//for
 }
+
+class Sorting{
+private:
+	typedef struct{
+		ElemType *elem;
+		int TableLen;
+	}SSTable;
+
+	//使用索引表来实现分块查找
+	typedef struct {
+		ElemType maxValue;
+		ElemType *low, *high;				//low存储索引表所指区间的最左边元素的地址，
+											//high存储索引表区间内的最右边元素的地址
+	}Index, *block;
+
+	static const int InitLen = 10;
+
+	//元素结点的定义。存储一个元素和下一个元素的地址
+	typedef struct ElemNode{
+		ElemType value;
+		struct ElemNode *next;
+	}ElemNode;
+
+	//最大值区块结点定义。存储当前区块的最大值和该区块第一个元素结点的地址
+	typedef struct MaxValueBlock{
+		ElemType maxValue;
+		struct MaxValueBlock *nextBlock;	//指向下一个MaxValueBlock;
+		ElemNode *firstNode;				//指向该区块的第一个元素结点
+	}MaxValueBlock, *MaxValueList;
+
+	typedef struct BSTNode{
+		ElemType key;
+		struct BSTNode *lchild,*rchild;
+	}BSTNode,*BSTree;
+
+public:
+	//顺序查找
+	int Search_Seq(SSTable ST,ElemType key){
+		int i;
+		for(i = 0;i < ST.TableLen && ST.elem[i] != key;++i){
+
+		}
+		return i == ST.TableLen ? -1 : i;
+	}
+
+	//另一种实现方式：“哨兵”
+	//key存储在数组第一位，无需判断是否越界
+	int Search_Seq_Sentinel(SSTable ST,ElemType key){
+		ST.elem[0] = key;
+		int i;
+		for(i = ST.TableLen;ST.elem[i] != key;--i){
+		}//从后往前查找
+		return i;
+	}
+
+	//假设数组为升序排列
+	//				__
+	//			______
+	//		__________
+	//	______________
+	//________________
+	int Binary_Search(SSTable L,ElemType key){
+		int low = 0, high = L.TableLen - 1,mid;
+		while(low <= high){
+			mid = (low + high) / 2;
+			if(L.elem[mid] == key){
+				return mid;
+			}
+			else if(L.elem[mid] > key){
+				high = mid - 1;
+			}
+			else{
+				low = mid + 1;
+			}
+		}
+		//循环完成后没有正常返回，于是有low > high
+		return -1;
+	}
+
+	int Block_Search(block blockList,SSTable ST,ElemType key){
+		int i;
+		for(i = 0;i < InitLen;i++){
+			if(key > blockList[i].maxValue){
+			//还没找到对应区块，继续循环
+			}
+			else if(key <= blockList[i].maxValue){
+				//首次大于上一个区块且小于目前区块最大值
+				//说明已经找到对应区块
+				break;
+			}
+		}
+		
+		if(i == InitLen) return -1;//如果大于每个最大值，即为失败
+
+		ElemType *Ptr;
+		//Ptr初始化为指向low的指针
+		for(Ptr = blockList[i - 1].low;Ptr;Ptr++){
+			int j = 0;//j代表了该区块的第几个元素
+			if(*Ptr == key){
+				return j;
+			}
+			else{
+				j++;
+			}
+			//一直到循环到该区块最右边都没有找到，查找失败
+			if(Ptr == blockList[i - 1].high) return -1;
+		}
+	}
+
+	ElemNode *Block_Search_LinkList(MaxValueList blockList,ElemType key){
+		MaxValueBlock *blockptr = blockList;
+		while(key < blockptr -> maxValue && blockptr != NULL){
+			blockptr = blockptr -> nextBlock;
+		}
+
+		if(blockptr == NULL)return NULL;//key大于所有的maxValue，查找失败
+		//若查找成功，则blockptr停在了恰好大于上一个block的maxvalue而小于当前block的maxvalue
+		
+		ElemNode *elemptr = blockptr -> firstNode;
+		while(elemptr != NULL && elemptr -> value != key){
+			elemptr = elemptr -> next;
+		}
+		//停下条件：elemptr为NULL 或者 elemptr -> value == key
+
+		if(elemptr == NULL)return NULL;//遍历区块下所有结点均失败
+		else{
+			return elemptr;
+		}
+	}
+
+	//二叉排序树的查找
+	BSTNode *BST_Search(BSTree T,int key)
+	{
+		while(T != NULL && key != T -> key)
+		{
+			if(key < T -> key)
+			{
+				T = T -> lchild;
+			}
+			else
+			{
+				T = T -> rchild;
+			}
+		}
+		return T;
+	}
+
+	BSTNode *BST_Search_Recursion(BSTree T,int key)
+	{
+		
+	}
+
+	//排序算法
+
+	void InsertSort(int A[], int n)
+	{
+		int i,j;
+		for(i = 2;i <= n; i++)
+		{
+			if(A[i] < A[i - 1])
+			{
+				A[0] = A[i];
+				for(j = i - 1;A[0] < A[j];j--)
+				{
+					A[j + 1] = A[j];
+				}
+				A[j + 1] = A[0];
+			}
+		}
+	}
+
+
+};
+
 
 int main() {
 	cout << "!!!Hello World!!!" << endl; // prints !!!Hello World!!!

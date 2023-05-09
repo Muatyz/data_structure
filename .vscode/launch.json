@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/mnt/e/WSL/Ubuntu2204/cpp/datastructure",
-      "program": "/mnt/e/WSL/Ubuntu2204/cpp/datastructure/build/Debug/outDebug",
+      "cwd": "/mnt/e/WSL/Ubuntu2204/cpp/dataStructure",
+      "program": "/mnt/e/WSL/Ubuntu2204/cpp/dataStructure/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
